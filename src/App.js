@@ -31,6 +31,7 @@ function App() {
         
       </div>
       <div>
+        {/* {todolist}  Mapping each item to separate line */}
         {todolist}
       </div>
       
