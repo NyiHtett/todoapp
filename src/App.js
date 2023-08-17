@@ -1,13 +1,31 @@
 import {react, useState, useEffect} from 'react';
 import './App.css';
-
+import { auth, database } from './firebase';
 function App() {
+  const [user,setUser] = useState(null);
   const [todolist, setTodolist ] = useState([]);
   const [keytrack, setKeytrack ] = useState('');
 
+  useEffect(()=>{
+    auth.onAuthStateChanged((user) => {
+      setUser(user);
+    });
+
+    const tasksRef = database.ref(`tasks/${user?.uid}`);
+  tasksRef.on('value', (snapshot) => {
+    const data = snapshot.val() || [];
+    setTodolist(data);
+  });
+  
+    return () => {
+      tasksRef.off('value');
+    };
+  },[user]);
+
+  
   //retrieve the todolist
   useEffect(() => {
-        const data = JSON.parse(localStorage.getItem('todolist'));
+        const data = JSON.parse(sessionStorage.getItem('todolist'));
         if(data){
           console.log(data);
           setTodolist(data);
@@ -16,13 +34,20 @@ function App() {
 
   //when to do list updates save the data to local storage
   useEffect(()=>{
-        localStorage.setItem('todolist', JSON.stringify(todolist));
+        sessionStorage.setItem('todolist', JSON.stringify(todolist));
   },[todolist]);
 
+  // const handleClicker = () => {
+  //   if(keytrack.trim() !== ''){
+  //     setTodolist([...todolist, keytrack]);
+  //     setKeytrack('');
+  //   }
+  // }
 
   const handleClicker = () => {
     if(keytrack.trim() !== ''){
-      setTodolist([...todolist, keytrack]);
+      const tasksRef = database.ref(`tasks/${user?.uid}`);
+      tasksRef.push(keytrack);
       setKeytrack('');
     }
   }
